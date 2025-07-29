@@ -10,6 +10,26 @@ import { Target, Loader2, ArrowLeft } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { z } from 'zod';
+
+// Validation schemas
+const signInSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string().min(6, 'Password must be at least 6 characters'),
+});
+
+const signUpSchema = z.object({
+  email: z.string().email('Please enter a valid email address'),
+  password: z.string()
+    .min(8, 'Password must be at least 8 characters')
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one number'),
+  displayName: z.string()
+    .min(2, 'Display name must be at least 2 characters')
+    .max(50, 'Display name must be less than 50 characters')
+    .regex(/^[a-zA-Z0-9\s]+$/, 'Display name can only contain letters, numbers, and spaces'),
+});
 
 const Auth = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -17,6 +37,7 @@ const Auth = () => {
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
@@ -40,8 +61,12 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setFieldErrors({});
 
     try {
+      // Validate input
+      const validatedData = signInSchema.parse({ email, password });
+      
       // Clean up existing state
       cleanupAuthState();
       
@@ -53,8 +78,8 @@ const Auth = () => {
       }
 
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+        email: validatedData.email,
+        password: validatedData.password,
       });
 
       if (error) throw error;
@@ -68,12 +93,22 @@ const Auth = () => {
         window.location.href = '/';
       }
     } catch (error: any) {
-      setError(error.message);
-      toast({
-        variant: "destructive",
-        title: "Sign in failed",
-        description: error.message,
-      });
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        error.issues.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0] as string] = err.message;
+          }
+        });
+        setFieldErrors(errors);
+      } else {
+        setError(error.message);
+        toast({
+          variant: "destructive",
+          title: "Sign in failed",
+          description: error.message,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -83,20 +118,24 @@ const Auth = () => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
+    setFieldErrors({});
 
     try {
+      // Validate input
+      const validatedData = signUpSchema.parse({ email, password, displayName });
+      
       // Clean up existing state
       cleanupAuthState();
 
       const redirectUrl = `${window.location.origin}/`;
       
       const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
+        email: validatedData.email,
+        password: validatedData.password,
         options: {
           emailRedirectTo: redirectUrl,
           data: {
-            display_name: displayName,
+            display_name: validatedData.displayName,
           },
         },
       });
@@ -110,12 +149,22 @@ const Auth = () => {
         });
       }
     } catch (error: any) {
-      setError(error.message);
-      toast({
-        variant: "destructive",
-        title: "Sign up failed",
-        description: error.message,
-      });
+      if (error instanceof z.ZodError) {
+        const errors: Record<string, string> = {};
+        error.issues.forEach((err) => {
+          if (err.path[0]) {
+            errors[err.path[0] as string] = err.message;
+          }
+        });
+        setFieldErrors(errors);
+      } else {
+        setError(error.message);
+        toast({
+          variant: "destructive",
+          title: "Sign up failed",
+          description: error.message,
+        });
+      }
     } finally {
       setIsLoading(false);
     }
@@ -166,11 +215,19 @@ const Auth = () => {
                       id="signin-email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (fieldErrors.email) {
+                          setFieldErrors(prev => ({ ...prev, email: '' }));
+                        }
+                      }}
                       placeholder="Enter your email"
                       required
                       disabled={isLoading}
                     />
+                    {fieldErrors.email && (
+                      <p className="text-sm text-destructive">{fieldErrors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signin-password">Password</Label>
@@ -178,11 +235,19 @@ const Auth = () => {
                       id="signin-password"
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (fieldErrors.password) {
+                          setFieldErrors(prev => ({ ...prev, password: '' }));
+                        }
+                      }}
                       placeholder="Enter your password"
                       required
                       disabled={isLoading}
                     />
+                    {fieldErrors.password && (
+                      <p className="text-sm text-destructive">{fieldErrors.password}</p>
+                    )}
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -199,11 +264,19 @@ const Auth = () => {
                       id="signup-name"
                       type="text"
                       value={displayName}
-                      onChange={(e) => setDisplayName(e.target.value)}
+                      onChange={(e) => {
+                        setDisplayName(e.target.value);
+                        if (fieldErrors.displayName) {
+                          setFieldErrors(prev => ({ ...prev, displayName: '' }));
+                        }
+                      }}
                       placeholder="Enter your name"
                       required
                       disabled={isLoading}
                     />
+                    {fieldErrors.displayName && (
+                      <p className="text-sm text-destructive">{fieldErrors.displayName}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
@@ -211,11 +284,19 @@ const Auth = () => {
                       id="signup-email"
                       type="email"
                       value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (fieldErrors.email) {
+                          setFieldErrors(prev => ({ ...prev, email: '' }));
+                        }
+                      }}
                       placeholder="Enter your email"
                       required
                       disabled={isLoading}
                     />
+                    {fieldErrors.email && (
+                      <p className="text-sm text-destructive">{fieldErrors.email}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="signup-password">Password</Label>
@@ -223,12 +304,23 @@ const Auth = () => {
                       id="signup-password"
                       type="password"
                       value={password}
-                      onChange={(e) => setPassword(e.target.value)}
+                      onChange={(e) => {
+                        setPassword(e.target.value);
+                        if (fieldErrors.password) {
+                          setFieldErrors(prev => ({ ...prev, password: '' }));
+                        }
+                      }}
                       placeholder="Create a password"
                       required
                       disabled={isLoading}
-                      minLength={6}
+                      minLength={8}
                     />
+                    {fieldErrors.password && (
+                      <p className="text-sm text-destructive">{fieldErrors.password}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 8 characters with uppercase, lowercase, and numbers
+                    </p>
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
