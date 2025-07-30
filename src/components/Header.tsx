@@ -35,9 +35,12 @@ const Header = () => {
             <a href="#applications" className="text-foreground hover:text-primary transition-smooth">
               Applications
             </a>
-            <a href="#profile" className="text-foreground hover:text-primary transition-smooth">
+            <button 
+              onClick={() => navigate('/profile')} 
+              className="text-foreground hover:text-primary transition-smooth"
+            >
               Profile
-            </a>
+            </button>
           </nav>
 
           {/* Desktop Actions */}
@@ -97,9 +100,12 @@ const Header = () => {
               <a href="#applications" className="text-foreground hover:text-primary transition-smooth py-2">
                 Applications
               </a>
-              <a href="#profile" className="text-foreground hover:text-primary transition-smooth py-2">
+              <button 
+                onClick={() => navigate('/profile')} 
+                className="text-foreground hover:text-primary transition-smooth py-2 text-left"
+              >
                 Profile
-              </a>
+              </button>
               <div className="flex flex-col gap-2 mt-4">
                 {loading ? (
                   <div className="w-full h-9 bg-muted animate-pulse rounded-md" />
