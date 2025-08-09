@@ -26,9 +26,12 @@ const Header = () => {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#dashboard" className="text-foreground hover:text-primary transition-smooth">
+            <button 
+              onClick={() => navigate('/')} 
+              className="text-foreground hover:text-primary transition-smooth"
+            >
               Dashboard
-            </a>
+            </button>
             <button 
               onClick={() => navigate('/opportunities')} 
               className="text-foreground hover:text-primary transition-smooth"
@@ -94,9 +97,12 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 p-4 bg-card rounded-lg border border-border shadow-soft">
             <nav className="flex flex-col gap-4">
-              <a href="#dashboard" className="text-foreground hover:text-primary transition-smooth py-2">
+              <button 
+                onClick={() => navigate('/')} 
+                className="text-foreground hover:text-primary transition-smooth py-2 text-left"
+              >
                 Dashboard
-              </a>
+              </button>
               <button 
                 onClick={() => navigate('/opportunities')} 
                 className="text-foreground hover:text-primary transition-smooth py-2 text-left"
