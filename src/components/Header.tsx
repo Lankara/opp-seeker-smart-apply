@@ -29,9 +29,12 @@ const Header = () => {
             <a href="#dashboard" className="text-foreground hover:text-primary transition-smooth">
               Dashboard
             </a>
-            <a href="#opportunities" className="text-foreground hover:text-primary transition-smooth">
+            <button 
+              onClick={() => navigate('/opportunities')} 
+              className="text-foreground hover:text-primary transition-smooth"
+            >
               Opportunities
-            </a>
+            </button>
             <a href="#applications" className="text-foreground hover:text-primary transition-smooth">
               Applications
             </a>
@@ -94,9 +97,12 @@ const Header = () => {
               <a href="#dashboard" className="text-foreground hover:text-primary transition-smooth py-2">
                 Dashboard
               </a>
-              <a href="#opportunities" className="text-foreground hover:text-primary transition-smooth py-2">
+              <button 
+                onClick={() => navigate('/opportunities')} 
+                className="text-foreground hover:text-primary transition-smooth py-2 text-left"
+              >
                 Opportunities
-              </a>
+              </button>
               <a href="#applications" className="text-foreground hover:text-primary transition-smooth py-2">
                 Applications
               </a>
