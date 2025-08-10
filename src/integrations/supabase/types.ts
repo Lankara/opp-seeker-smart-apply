@@ -143,6 +143,51 @@ export type Database = {
         }
         Relationships: []
       }
+      job_opportunities: {
+        Row: {
+          company_name: string
+          created_at: string
+          email_sender: string | null
+          email_subject: string | null
+          extracted_keywords: string[] | null
+          id: string
+          job_link: string | null
+          job_title: string
+          raw_email_content: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          company_name: string
+          created_at?: string
+          email_sender?: string | null
+          email_subject?: string | null
+          extracted_keywords?: string[] | null
+          id?: string
+          job_link?: string | null
+          job_title: string
+          raw_email_content?: string | null
+          source: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          company_name?: string
+          created_at?: string
+          email_sender?: string | null
+          email_subject?: string | null
+          extracted_keywords?: string[] | null
+          id?: string
+          job_link?: string | null
+          job_title?: string
+          raw_email_content?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       personal_details: {
         Row: {
           address: string | null
