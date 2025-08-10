@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          application_date: string
+          application_method: string | null
+          company_name: string
+          created_at: string
+          follow_up_date: string | null
+          id: string
+          job_title: string
+          job_url: string | null
+          location: string | null
+          notes: string | null
+          salary_range: string | null
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_date?: string
+          application_method?: string | null
+          company_name: string
+          created_at?: string
+          follow_up_date?: string | null
+          id?: string
+          job_title: string
+          job_url?: string | null
+          location?: string | null
+          notes?: string | null
+          salary_range?: string | null
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_date?: string
+          application_method?: string | null
+          company_name?: string
+          created_at?: string
+          follow_up_date?: string | null
+          id?: string
+          job_title?: string
+          job_url?: string | null
+          location?: string | null
+          notes?: string | null
+          salary_range?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       education: {
         Row: {
           created_at: string
