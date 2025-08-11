@@ -45,10 +45,10 @@ type Experience = z.infer<typeof experienceSchema> & { id?: string };
 type Education = z.infer<typeof educationSchema> & { id?: string };
 
 const Profile = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [education, setEducation] = useState<Education[]>([]);
 
@@ -64,12 +64,19 @@ const Profile = () => {
   });
 
   useEffect(() => {
+    console.log('Profile useEffect - user:', user?.id, 'authLoading:', authLoading);
+    if (authLoading) {
+      console.log('Still loading auth state...');
+      return;
+    }
     if (!user) {
+      console.log('No user found, redirecting to auth');
       navigate('/auth');
       return;
     }
+    console.log('User found, fetching profile data');
     fetchProfileData();
-  }, [user, navigate]);
+  }, [user, authLoading, navigate]);
 
   const fetchProfileData = async () => {
     if (!user) return;
@@ -134,7 +141,7 @@ const Profile = () => {
   const onSubmitPersonalDetails = async (data: PersonalDetails) => {
     if (!user) return;
 
-    setLoading(true);
+    setSaving(true);
     try {
       const { error } = await supabase
         .from('personal_details')
@@ -159,7 +166,7 @@ const Profile = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -208,7 +215,7 @@ const Profile = () => {
   const saveExperiences = async () => {
     if (!user) return;
 
-    setLoading(true);
+    setSaving(true);
     try {
       for (const experience of experiences) {
         if (experience.company_name && experience.position) {
@@ -242,7 +249,7 @@ const Profile = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
@@ -291,7 +298,7 @@ const Profile = () => {
   const saveEducation = async () => {
     if (!user) return;
 
-    setLoading(true);
+    setSaving(true);
     try {
       for (const edu of education) {
         if (edu.institution && edu.degree) {
@@ -325,9 +332,20 @@ const Profile = () => {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
+
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!user) {
     return null;
@@ -431,7 +449,7 @@ const Profile = () => {
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" disabled={loading}>
+                  <Button type="submit" disabled={saving}>
                     Save Personal Details
                   </Button>
                 </form>
@@ -522,7 +540,7 @@ const Profile = () => {
                 </div>
               ))}
               {experiences.length > 0 && (
-                <Button onClick={saveExperiences} disabled={loading}>
+                <Button onClick={saveExperiences} disabled={saving}>
                   Save All Experiences
                 </Button>
               )}
@@ -609,7 +627,7 @@ const Profile = () => {
                 </div>
               ))}
               {education.length > 0 && (
-                <Button onClick={saveEducation} disabled={loading}>
+                <Button onClick={saveEducation} disabled={saving}>
                   Save All Education
                 </Button>
               )}
