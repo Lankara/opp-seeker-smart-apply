@@ -19,6 +19,7 @@ const Opportunities = () => {
   const [extractedJobs, setExtractedJobs] = useState<any[]>([]);
   const [showExtracted, setShowExtracted] = useState(false);
   const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [isGeneratingDocuments, setIsGeneratingDocuments] = useState<string | null>(null);
 
   // Static opportunities (existing mock data)
   const staticOpportunities = [
@@ -198,6 +199,74 @@ const Opportunities = () => {
       setExtractedJobs(formattedJobs);
     } catch (error) {
       console.error('Error loading extracted jobs:', error);
+    }
+  };
+
+  const generateApplicationDocuments = async (opportunity: any) => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to generate application documents.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setIsGeneratingDocuments(opportunity.id);
+
+    try {
+      const response = await supabase.functions.invoke('generate-application-documents', {
+        body: {
+          jobData: {
+            title: opportunity.title,
+            company: opportunity.company,
+            description: opportunity.fullDescription || opportunity.description,
+            skills: opportunity.skills
+          }
+        }
+      });
+
+      if (response.error) {
+        throw response.error;
+      }
+
+      const { coverLetterPdf, cvPdf, keywords } = response.data;
+
+      // Create download links for the PDFs
+      const coverLetterBlob = new Blob([atob(coverLetterPdf)], { type: 'text/html' });
+      const cvBlob = new Blob([atob(cvPdf)], { type: 'text/html' });
+
+      const coverLetterUrl = URL.createObjectURL(coverLetterBlob);
+      const cvUrl = URL.createObjectURL(cvBlob);
+
+      // Download both files
+      const downloadFile = (url: string, filename: string) => {
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      };
+
+      downloadFile(coverLetterUrl, `Cover_Letter_${opportunity.company.replace(/\s+/g, '_')}.html`);
+      downloadFile(cvUrl, `CV_${opportunity.company.replace(/\s+/g, '_')}.html`);
+
+      toast({
+        title: "Documents Generated Successfully",
+        description: `Cover letter and CV tailored for ${opportunity.company} have been downloaded. Keywords used: ${keywords.join(', ')}`,
+      });
+
+    } catch (error) {
+      console.error('Error generating documents:', error);
+      toast({
+        title: "Generation Failed",
+        description: "Failed to generate application documents. Please ensure your profile is complete and try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeneratingDocuments(null);
     }
   };
 
@@ -403,15 +472,12 @@ const Opportunities = () => {
                       </DialogContent>
                     </Dialog>
                     
-                    {(opportunity as any).link ? (
-                      <Button asChild>
-                        <a href={(opportunity as any).link} target="_blank" rel="noopener noreferrer">
-                          View Job
-                        </a>
-                      </Button>
-                    ) : (
-                      <Button>Apply Now</Button>
-                    )}
+                    <Button 
+                      onClick={() => generateApplicationDocuments(opportunity)}
+                      disabled={isGeneratingDocuments === opportunity.id}
+                    >
+                      {isGeneratingDocuments === opportunity.id ? 'Generating...' : 'Apply Now'}
+                    </Button>
                     <Button variant="outline">Save</Button>
                   </div>
                 </CardContent>

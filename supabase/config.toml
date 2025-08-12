@@ -10,3 +10,6 @@ port = 54322
 
 [functions.extract-gmail-jobs]
 verify_jwt = false
+
+[functions.generate-application-documents]
+verify_jwt = true
