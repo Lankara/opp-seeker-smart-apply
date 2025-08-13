@@ -25,32 +25,34 @@ const Header = () => {
           </div>
 
           {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
-            <button 
-              onClick={() => navigate('/')} 
-              className="text-foreground hover:text-primary transition-smooth"
-            >
-              Dashboard
-            </button>
-            <button 
-              onClick={() => navigate('/opportunities')} 
-              className="text-foreground hover:text-primary transition-smooth"
-            >
-              Opportunities
-            </button>
-            <button 
-              onClick={() => navigate('/applications')} 
-              className="text-foreground hover:text-primary transition-smooth"
-            >
-              Applications
-            </button>
-            <button 
-              onClick={() => navigate('/profile')} 
-              className="text-foreground hover:text-primary transition-smooth"
-            >
-              Profile
-            </button>
-          </nav>
+          {user && (
+            <nav className="hidden md:flex items-center gap-8">
+              <button 
+                onClick={() => navigate('/')} 
+                className="text-foreground hover:text-primary transition-smooth"
+              >
+                Dashboard
+              </button>
+              <button 
+                onClick={() => navigate('/opportunities')} 
+                className="text-foreground hover:text-primary transition-smooth"
+              >
+                Opportunities
+              </button>
+              <button 
+                onClick={() => navigate('/applications')} 
+                className="text-foreground hover:text-primary transition-smooth"
+              >
+                Applications
+              </button>
+              <button 
+                onClick={() => navigate('/profile')} 
+                className="text-foreground hover:text-primary transition-smooth"
+              >
+                Profile
+              </button>
+            </nav>
+          )}
 
           {/* Desktop Actions */}
           <div className="hidden md:flex items-center gap-3">
@@ -100,30 +102,34 @@ const Header = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden mt-4 p-4 bg-card rounded-lg border border-border shadow-soft">
             <nav className="flex flex-col gap-4">
-              <button 
-                onClick={() => navigate('/')} 
-                className="text-foreground hover:text-primary transition-smooth py-2 text-left"
-              >
-                Dashboard
-              </button>
-              <button 
-                onClick={() => navigate('/opportunities')} 
-                className="text-foreground hover:text-primary transition-smooth py-2 text-left"
-              >
-                Opportunities
-              </button>
-              <button 
-                onClick={() => navigate('/applications')} 
-                className="text-foreground hover:text-primary transition-smooth py-2 text-left"
-              >
-                Applications
-              </button>
-              <button 
-                onClick={() => navigate('/profile')} 
-                className="text-foreground hover:text-primary transition-smooth py-2 text-left"
-              >
-                Profile
-              </button>
+              {user && (
+                <>
+                  <button 
+                    onClick={() => navigate('/')} 
+                    className="text-foreground hover:text-primary transition-smooth py-2 text-left"
+                  >
+                    Dashboard
+                  </button>
+                  <button 
+                    onClick={() => navigate('/opportunities')} 
+                    className="text-foreground hover:text-primary transition-smooth py-2 text-left"
+                  >
+                    Opportunities
+                  </button>
+                  <button 
+                    onClick={() => navigate('/applications')} 
+                    className="text-foreground hover:text-primary transition-smooth py-2 text-left"
+                  >
+                    Applications
+                  </button>
+                  <button 
+                    onClick={() => navigate('/profile')} 
+                    className="text-foreground hover:text-primary transition-smooth py-2 text-left"
+                  >
+                    Profile
+                  </button>
+                </>
+              )}
               <div className="flex flex-col gap-2 mt-4">
                 {loading ? (
                   <div className="w-full h-9 bg-muted animate-pulse rounded-md" />
