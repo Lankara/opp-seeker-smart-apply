@@ -49,7 +49,7 @@ serve(async (req) => {
 
     // Fetch user profile data
     const [personalDetails, experiences, education] = await Promise.all([
-      supabase.from('personal_details').select('*').eq('user_id', user.id).single(),
+      supabase.from('personal_details').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('experiences').select('*').eq('user_id', user.id).order('start_date', { ascending: false }),
       supabase.from('education').select('*').eq('user_id', user.id).order('start_date', { ascending: false })
     ]);
@@ -71,8 +71,8 @@ serve(async (req) => {
 
     return new Response(
       JSON.stringify({
-        coverLetter: coverLetter,
-        cv: cv,
+        coverLetterPdf: coverLetter,
+        cvPdf: cv,
         keywords: keywords
       }),
       {

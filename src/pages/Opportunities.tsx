@@ -232,9 +232,9 @@ const Opportunities = () => {
 
       const { coverLetterPdf, cvPdf, keywords } = response.data;
 
-      // Create download links for the PDFs
-      const coverLetterBlob = new Blob([atob(coverLetterPdf)], { type: 'text/html' });
-      const cvBlob = new Blob([atob(cvPdf)], { type: 'text/html' });
+      // Create download links for the documents
+      const coverLetterBlob = new Blob([coverLetterPdf], { type: 'text/plain' });
+      const cvBlob = new Blob([cvPdf], { type: 'text/plain' });
 
       const coverLetterUrl = URL.createObjectURL(coverLetterBlob);
       const cvUrl = URL.createObjectURL(cvBlob);
@@ -250,8 +250,8 @@ const Opportunities = () => {
         URL.revokeObjectURL(url);
       };
 
-      downloadFile(coverLetterUrl, `Cover_Letter_${opportunity.company.replace(/\s+/g, '_')}.html`);
-      downloadFile(cvUrl, `CV_${opportunity.company.replace(/\s+/g, '_')}.html`);
+      downloadFile(coverLetterUrl, `Cover_Letter_${opportunity.company.replace(/\s+/g, '_')}.txt`);
+      downloadFile(cvUrl, `CV_${opportunity.company.replace(/\s+/g, '_')}.txt`);
 
       toast({
         title: "Documents Generated Successfully",
