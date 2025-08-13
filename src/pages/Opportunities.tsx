@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { MapPin, Clock, DollarSign, Building, Mail, Download, Eye } from "lucide-react";
+import { MapPin, Clock, DollarSign, Building, Mail, Download, Eye, ChevronDown, ChevronUp } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -18,7 +17,7 @@ const Opportunities = () => {
   const [isExtracting, setIsExtracting] = useState(false);
   const [extractedJobs, setExtractedJobs] = useState<any[]>([]);
   const [showExtracted, setShowExtracted] = useState(false);
-  const [selectedJob, setSelectedJob] = useState<any>(null);
+  const [expandedJobs, setExpandedJobs] = useState<Set<number | string>>(new Set());
   const [isGeneratingDocuments, setIsGeneratingDocuments] = useState<string | null>(null);
 
   // Static opportunities (existing mock data)
@@ -200,6 +199,16 @@ const Opportunities = () => {
     } catch (error) {
       console.error('Error loading extracted jobs:', error);
     }
+  };
+
+  const toggleJobDetails = (jobId: number | string) => {
+    const newExpanded = new Set(expandedJobs);
+    if (newExpanded.has(jobId)) {
+      newExpanded.delete(jobId);
+    } else {
+      newExpanded.add(jobId);
+    }
+    setExpandedJobs(newExpanded);
   };
 
   const generateApplicationDocuments = async (opportunity: any) => {
@@ -403,74 +412,23 @@ const Opportunities = () => {
                   </div>
                   
                   <div className="flex gap-2">
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button variant="outline" className="flex items-center gap-2">
-                          <Eye className="h-4 w-4" />
+                    <Button 
+                      variant="outline" 
+                      className="flex items-center gap-2"
+                      onClick={() => toggleJobDetails(opportunity.id)}
+                    >
+                      {expandedJobs.has(opportunity.id) ? (
+                        <>
+                          <ChevronUp className="h-4 w-4" />
+                          Hide Details
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-4 w-4" />
                           View Details
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle className="text-xl">{opportunity.title}</DialogTitle>
-                          <DialogDescription className="flex items-center gap-2">
-                            <Building className="h-4 w-4" />
-                            {opportunity.company}
-                          </DialogDescription>
-                        </DialogHeader>
-                        
-                        <div className="space-y-4">
-                          <div className="flex flex-wrap gap-4 text-sm">
-                            <div className="flex items-center gap-1">
-                              <MapPin className="h-4 w-4" />
-                              {opportunity.location}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <DollarSign className="h-4 w-4" />
-                              {opportunity.salary}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Clock className="h-4 w-4" />
-                              {opportunity.posted}
-                            </div>
-                            <Badge variant="secondary">{opportunity.type}</Badge>
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-semibold mb-2">Job Description</h4>
-                            <div className="text-sm text-muted-foreground whitespace-pre-line">
-                              {opportunity.fullDescription || opportunity.description}
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-semibold mb-2">
-                              {(opportunity as any).isExtracted ? 'Extracted Keywords:' : 'Required Skills:'}
-                            </h4>
-                            <div className="flex flex-wrap gap-2">
-                              {opportunity.skills.map((skill: string, index: number) => (
-                                <Badge key={`${skill}-${index}`} variant="outline">
-                                  {skill}
-                                </Badge>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          <div className="flex gap-2 pt-4">
-                            {(opportunity as any).link ? (
-                              <Button asChild>
-                                <a href={(opportunity as any).link} target="_blank" rel="noopener noreferrer">
-                                  View Job
-                                </a>
-                              </Button>
-                            ) : (
-                              <Button>Apply Now</Button>
-                            )}
-                            <Button variant="outline">Save</Button>
-                          </div>
-                        </div>
-                      </DialogContent>
-                    </Dialog>
+                        </>
+                      )}
+                    </Button>
                     
                     <Button 
                       onClick={() => generateApplicationDocuments(opportunity)}
@@ -480,6 +438,49 @@ const Opportunities = () => {
                     </Button>
                     <Button variant="outline">Save</Button>
                   </div>
+
+                  {/* Expandable Job Details Section */}
+                  {expandedJobs.has(opportunity.id) && (
+                    <div className="mt-6 pt-6 border-t space-y-4">
+                      <div>
+                        <h4 className="font-semibold mb-2">Full Job Description</h4>
+                        <div className="text-sm text-muted-foreground whitespace-pre-line bg-muted/30 p-4 rounded-lg">
+                          {opportunity.fullDescription || opportunity.description}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold mb-2">
+                          {(opportunity as any).isExtracted ? 'Extracted Keywords:' : 'Required Skills:'}
+                        </h4>
+                        <div className="flex flex-wrap gap-2">
+                          {opportunity.skills.map((skill: string, index: number) => (
+                            <Badge key={`${skill}-${index}`} variant="outline">
+                              {skill}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      <div className="flex gap-2 pt-4">
+                        {(opportunity as any).link ? (
+                          <Button asChild>
+                            <a href={(opportunity as any).link} target="_blank" rel="noopener noreferrer">
+                              View Original Job
+                            </a>
+                          </Button>
+                        ) : (
+                          <Button 
+                            onClick={() => generateApplicationDocuments(opportunity)}
+                            disabled={isGeneratingDocuments === opportunity.id}
+                          >
+                            {isGeneratingDocuments === opportunity.id ? 'Generating...' : 'Apply Now'}
+                          </Button>
+                        )}
+                        <Button variant="outline">Save for Later</Button>
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))
