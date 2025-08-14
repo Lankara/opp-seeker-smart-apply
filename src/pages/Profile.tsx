@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Eye, EyeOff } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 
@@ -51,6 +51,7 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [education, setEducation] = useState<Education[]>([]);
+  const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
 
   const personalForm = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
@@ -364,275 +365,430 @@ const Profile = () => {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Dashboard
           </Button>
-          <h1 className="text-3xl font-bold text-foreground">Profile & CV Details</h1>
-          <p className="text-muted-foreground">Manage your personal information, experience, and education</p>
+          <div className="flex justify-between items-center">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">Profile & CV Details</h1>
+              <p className="text-muted-foreground">Manage your personal information, experience, and education</p>
+            </div>
+            <Button
+              onClick={() => setViewMode(viewMode === 'edit' ? 'preview' : 'edit')}
+              variant="outline"
+              className="flex items-center gap-2"
+            >
+              {viewMode === 'edit' ? (
+                <>
+                  <Eye className="w-4 h-4" />
+                  Preview CV
+                </>
+              ) : (
+                <>
+                  <EyeOff className="w-4 h-4" />
+                  Edit Mode
+                </>
+              )}
+            </Button>
+          </div>
         </div>
 
         <div className="space-y-8">
-          {/* Personal Details */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Personal Details</CardTitle>
-              <CardDescription>Basic information about yourself</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Form {...personalForm}>
-                <form onSubmit={personalForm.handleSubmit(onSubmitPersonalDetails)} className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <FormField
-                      control={personalForm.control}
-                      name="full_name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Full Name</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={personalForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Email</FormLabel>
-                          <FormControl>
-                            <Input {...field} type="email" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={personalForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Phone</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={personalForm.control}
-                      name="address"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Address</FormLabel>
-                          <FormControl>
-                            <Input {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <FormField
-                    control={personalForm.control}
-                    name="summary"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Professional Summary</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            {...field} 
-                            placeholder="Brief summary of your professional background and goals"
-                            rows={4}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+          {viewMode === 'edit' ? (
+            <>
+              {/* Personal Details */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>Personal Details</CardTitle>
+                  <CardDescription>Basic information about yourself</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...personalForm}>
+                    <form onSubmit={personalForm.handleSubmit(onSubmitPersonalDetails)} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={personalForm.control}
+                          name="full_name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Full Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={personalForm.control}
+                          name="email"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Email</FormLabel>
+                              <FormControl>
+                                <Input {...field} type="email" />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={personalForm.control}
+                          name="phone"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Phone</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={personalForm.control}
+                          name="address"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Address</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={personalForm.control}
+                        name="summary"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Professional Summary</FormLabel>
+                            <FormControl>
+                              <Textarea 
+                                {...field} 
+                                placeholder="Brief summary of your professional background and goals"
+                                rows={4}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" disabled={saving}>
+                        Save Personal Details
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              {/* CV Preview Mode */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-center text-2xl font-bold">
+                    {personalForm.getValues('full_name') || 'Your Name'}
+                  </CardTitle>
+                  <div className="text-center space-y-1 text-muted-foreground">
+                    {personalForm.getValues('email') && (
+                      <p>{personalForm.getValues('email')}</p>
                     )}
-                  />
-                  <Button type="submit" disabled={saving}>
-                    Save Personal Details
-                  </Button>
-                </form>
-              </Form>
-            </CardContent>
-          </Card>
+                    {personalForm.getValues('phone') && (
+                      <p>{personalForm.getValues('phone')}</p>
+                    )}
+                    {personalForm.getValues('address') && (
+                      <p>{personalForm.getValues('address')}</p>
+                    )}
+                  </div>
+                </CardHeader>
+                {personalForm.getValues('summary') && (
+                  <CardContent>
+                    <div className="text-center">
+                      <h3 className="font-semibold mb-2">Professional Summary</h3>
+                      <p className="text-muted-foreground">{personalForm.getValues('summary')}</p>
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            </>
+          )}
 
-          {/* Experience */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Work Experience</CardTitle>
-                  <CardDescription>Your professional experience and positions</CardDescription>
-                </div>
-                <Button onClick={addExperience} variant="outline">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Experience
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {experiences.map((experience, index) => (
-                <div key={index} className="border border-border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold">Experience {index + 1}</h3>
-                    <Button
-                      onClick={() => deleteExperience(index)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
+          {viewMode === 'edit' ? (
+            <>
+              {/* Experience */}
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Work Experience</CardTitle>
+                      <CardDescription>Your professional experience and positions</CardDescription>
+                    </div>
+                    <Button onClick={addExperience} variant="outline">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Experience
                     </Button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Company Name</label>
-                      <Input
-                        value={experience.company_name}
-                        onChange={(e) => updateExperience(index, 'company_name', e.target.value)}
-                        placeholder="Company name"
-                      />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {experiences.map((experience, index) => (
+                    <div key={index} className="border border-border rounded-lg p-4 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-semibold">Experience {index + 1}</h3>
+                        <Button
+                          onClick={() => deleteExperience(index)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Company Name</label>
+                          <Input
+                            value={experience.company_name}
+                            onChange={(e) => updateExperience(index, 'company_name', e.target.value)}
+                            placeholder="Company name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Position</label>
+                          <Input
+                            value={experience.position}
+                            onChange={(e) => updateExperience(index, 'position', e.target.value)}
+                            placeholder="Job title"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Start Date</label>
+                          <Input
+                            type="date"
+                            value={experience.start_date}
+                            onChange={(e) => updateExperience(index, 'start_date', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">End Date</label>
+                          <Input
+                            type="date"
+                            value={experience.end_date}
+                            onChange={(e) => updateExperience(index, 'end_date', e.target.value)}
+                            disabled={experience.is_current}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          checked={experience.is_current}
+                          onChange={(e) => updateExperience(index, 'is_current', e.target.checked)}
+                          className="rounded"
+                        />
+                        <label className="text-sm">Currently working here</label>
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Description</label>
+                        <Textarea
+                          value={experience.description}
+                          onChange={(e) => updateExperience(index, 'description', e.target.value)}
+                          placeholder="Describe your responsibilities and achievements"
+                          rows={3}
+                        />
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Position</label>
-                      <Input
-                        value={experience.position}
-                        onChange={(e) => updateExperience(index, 'position', e.target.value)}
-                        placeholder="Job title"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Start Date</label>
-                      <Input
-                        type="date"
-                        value={experience.start_date}
-                        onChange={(e) => updateExperience(index, 'start_date', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">End Date</label>
-                      <Input
-                        type="date"
-                        value={experience.end_date}
-                        onChange={(e) => updateExperience(index, 'end_date', e.target.value)}
-                        disabled={experience.is_current}
-                      />
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      checked={experience.is_current}
-                      onChange={(e) => updateExperience(index, 'is_current', e.target.checked)}
-                      className="rounded"
-                    />
-                    <label className="text-sm">Currently working here</label>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2">Description</label>
-                    <Textarea
-                      value={experience.description}
-                      onChange={(e) => updateExperience(index, 'description', e.target.value)}
-                      placeholder="Describe your responsibilities and achievements"
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              ))}
+                  ))}
+                  {experiences.length > 0 && (
+                    <Button onClick={saveExperiences} disabled={saving}>
+                      Save All Experiences
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              {/* Experience Preview */}
               {experiences.length > 0 && (
-                <Button onClick={saveExperiences} disabled={saving}>
-                  Save All Experiences
-                </Button>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Professional Experience</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {experiences.filter(exp => exp.company_name && exp.position).map((experience, index) => (
+                      <div key={index} className="border-l-4 border-primary pl-4">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-start">
+                          <div>
+                            <h3 className="font-semibold text-lg">{experience.position}</h3>
+                            <p className="text-primary font-medium">{experience.company_name}</p>
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1 md:mt-0">
+                            {experience.start_date && (
+                              <>
+                                {new Date(experience.start_date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  year: 'numeric' 
+                                })}
+                                {' - '}
+                                {experience.is_current ? 'Present' : 
+                                  experience.end_date ? 
+                                    new Date(experience.end_date).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      year: 'numeric' 
+                                    }) : 'Present'
+                                }
+                              </>
+                            )}
+                          </div>
+                        </div>
+                        {experience.description && (
+                          <p className="mt-2 text-muted-foreground">{experience.description}</p>
+                        )}
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
+            </>
+          )}
 
-          {/* Education */}
-          <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <div>
-                  <CardTitle>Education</CardTitle>
-                  <CardDescription>Your educational background and qualifications</CardDescription>
-                </div>
-                <Button onClick={addEducation} variant="outline">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Education
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {education.map((edu, index) => (
-                <div key={index} className="border border-border rounded-lg p-4 space-y-4">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-semibold">Education {index + 1}</h3>
-                    <Button
-                      onClick={() => deleteEducation(index)}
-                      variant="outline"
-                      size="sm"
-                    >
-                      <Trash2 className="w-4 h-4" />
+          {viewMode === 'edit' ? (
+            <>
+              {/* Education */}
+              <Card>
+                <CardHeader>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle>Education</CardTitle>
+                      <CardDescription>Your educational background and qualifications</CardDescription>
+                    </div>
+                    <Button onClick={addEducation} variant="outline">
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Education
                     </Button>
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Institution</label>
-                      <Input
-                        value={edu.institution}
-                        onChange={(e) => updateEducation(index, 'institution', e.target.value)}
-                        placeholder="University/School name"
-                      />
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  {education.map((edu, index) => (
+                    <div key={index} className="border border-border rounded-lg p-4 space-y-4">
+                      <div className="flex justify-between items-start">
+                        <h3 className="font-semibold">Education {index + 1}</h3>
+                        <Button
+                          onClick={() => deleteEducation(index)}
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Institution</label>
+                          <Input
+                            value={edu.institution}
+                            onChange={(e) => updateEducation(index, 'institution', e.target.value)}
+                            placeholder="University/School name"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Degree</label>
+                          <Input
+                            value={edu.degree}
+                            onChange={(e) => updateEducation(index, 'degree', e.target.value)}
+                            placeholder="Bachelor's, Master's, etc."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Field of Study</label>
+                          <Input
+                            value={edu.field_of_study}
+                            onChange={(e) => updateEducation(index, 'field_of_study', e.target.value)}
+                            placeholder="Computer Science, Business, etc."
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Grade/GPA</label>
+                          <Input
+                            value={edu.grade}
+                            onChange={(e) => updateEducation(index, 'grade', e.target.value)}
+                            placeholder="Grade or GPA"
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">Start Date</label>
+                          <Input
+                            type="date"
+                            value={edu.start_date}
+                            onChange={(e) => updateEducation(index, 'start_date', e.target.value)}
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium mb-2">End Date</label>
+                          <Input
+                            type="date"
+                            value={edu.end_date}
+                            onChange={(e) => updateEducation(index, 'end_date', e.target.value)}
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Degree</label>
-                      <Input
-                        value={edu.degree}
-                        onChange={(e) => updateEducation(index, 'degree', e.target.value)}
-                        placeholder="Bachelor's, Master's, etc."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Field of Study</label>
-                      <Input
-                        value={edu.field_of_study}
-                        onChange={(e) => updateEducation(index, 'field_of_study', e.target.value)}
-                        placeholder="Computer Science, Business, etc."
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Grade/GPA</label>
-                      <Input
-                        value={edu.grade}
-                        onChange={(e) => updateEducation(index, 'grade', e.target.value)}
-                        placeholder="Grade or GPA"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">Start Date</label>
-                      <Input
-                        type="date"
-                        value={edu.start_date}
-                        onChange={(e) => updateEducation(index, 'start_date', e.target.value)}
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium mb-2">End Date</label>
-                      <Input
-                        type="date"
-                        value={edu.end_date}
-                        onChange={(e) => updateEducation(index, 'end_date', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
+                  ))}
+                  {education.length > 0 && (
+                    <Button onClick={saveEducation} disabled={saving}>
+                      Save All Education
+                    </Button>
+                  )}
+                </CardContent>
+              </Card>
+            </>
+          ) : (
+            <>
+              {/* Education Preview */}
               {education.length > 0 && (
-                <Button onClick={saveEducation} disabled={saving}>
-                  Save All Education
-                </Button>
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Education</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    {education.filter(edu => edu.institution && edu.degree).map((edu, index) => (
+                      <div key={index} className="border-l-4 border-primary pl-4">
+                        <div className="flex flex-col md:flex-row md:justify-between md:items-start">
+                          <div>
+                            <h3 className="font-semibold text-lg">{edu.degree}</h3>
+                            <p className="text-primary font-medium">{edu.institution}</p>
+                            {edu.field_of_study && (
+                              <p className="text-muted-foreground">{edu.field_of_study}</p>
+                            )}
+                          </div>
+                          <div className="text-sm text-muted-foreground mt-1 md:mt-0">
+                            {edu.start_date && (
+                              <>
+                                {new Date(edu.start_date).toLocaleDateString('en-US', { 
+                                  month: 'short', 
+                                  year: 'numeric' 
+                                })}
+                                {edu.end_date && (
+                                  <>
+                                    {' - '}
+                                    {new Date(edu.end_date).toLocaleDateString('en-US', { 
+                                      month: 'short', 
+                                      year: 'numeric' 
+                                    })}
+                                  </>
+                                )}
+                              </>
+                            )}
+                            {edu.grade && (
+                              <div className="mt-1">Grade: {edu.grade}</div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
               )}
-            </CardContent>
-          </Card>
+            </>
+          )}
         </div>
       </div>
     </div>
