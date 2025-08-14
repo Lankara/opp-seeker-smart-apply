@@ -175,6 +175,12 @@ Format the letter with proper business letter formatting.`;
   });
 
   const data = await response.json();
+  
+  if (!data.choices || data.choices.length === 0) {
+    console.error('No choices in OpenAI response:', data);
+    throw new Error('Failed to generate cover letter: No response from AI');
+  }
+  
   return data.choices[0].message.content;
 }
 
@@ -249,5 +255,11 @@ Format the CV professionally with clear section headers and bullet points.`;
   });
 
   const data = await response.json();
+  
+  if (!data.choices || data.choices.length === 0) {
+    console.error('No choices in OpenAI response:', data);
+    throw new Error('Failed to generate CV: No response from AI');
+  }
+  
   return data.choices[0].message.content;
 }

@@ -9,6 +9,7 @@ import { MapPin, Clock, DollarSign, Building, Mail, Download, Eye, ChevronDown, 
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { DocumentViewerModal } from "@/components/DocumentViewerModal";
 
 const Opportunities = () => {
   const { toast } = useToast();
@@ -19,6 +20,19 @@ const Opportunities = () => {
   const [showExtracted, setShowExtracted] = useState(false);
   const [expandedJobs, setExpandedJobs] = useState<Set<number | string>>(new Set());
   const [isGeneratingDocuments, setIsGeneratingDocuments] = useState<string | null>(null);
+  const [documentModal, setDocumentModal] = useState<{
+    isOpen: boolean;
+    coverLetter: string;
+    cv: string;
+    jobTitle: string;
+    companyName: string;
+  }>({
+    isOpen: false,
+    coverLetter: '',
+    cv: '',
+    jobTitle: '',
+    companyName: ''
+  });
 
   // Static opportunities (existing mock data)
   const staticOpportunities = [
@@ -224,7 +238,7 @@ const Opportunities = () => {
     setIsGeneratingDocuments(opportunity.id);
 
     try {
-      const response = await supabase.functions.invoke('generate-application-documents', {
+      const { data, error } = await supabase.functions.invoke('generate-application-documents', {
         body: {
           jobData: {
             title: opportunity.title,
@@ -235,36 +249,30 @@ const Opportunities = () => {
         }
       });
 
-      if (response.error) {
-        throw response.error;
+      if (error) {
+        console.error('Supabase function error:', error);
+        throw error;
       }
 
-      const { coverLetterPdf, cvPdf, keywords } = response.data;
+      if (data.error) {
+        console.error('Function returned error:', data.error);
+        throw new Error(data.error);
+      }
 
-      // Create download links for the documents
-      const coverLetterBlob = new Blob([coverLetterPdf], { type: 'text/plain' });
-      const cvBlob = new Blob([cvPdf], { type: 'text/plain' });
+      const { coverLetterPdf, cvPdf, keywords } = data;
 
-      const coverLetterUrl = URL.createObjectURL(coverLetterBlob);
-      const cvUrl = URL.createObjectURL(cvBlob);
-
-      // Download both files
-      const downloadFile = (url: string, filename: string) => {
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-      };
-
-      downloadFile(coverLetterUrl, `Cover_Letter_${opportunity.company.replace(/\s+/g, '_')}.txt`);
-      downloadFile(cvUrl, `CV_${opportunity.company.replace(/\s+/g, '_')}.txt`);
+      // Open the document viewer modal with the generated documents
+      setDocumentModal({
+        isOpen: true,
+        coverLetter: coverLetterPdf || '',
+        cv: cvPdf || '',
+        jobTitle: opportunity.title,
+        companyName: opportunity.company
+      });
 
       toast({
         title: "Documents Generated Successfully",
-        description: `Cover letter and CV tailored for ${opportunity.company} have been downloaded. Keywords used: ${keywords.join(', ')}`,
+        description: `Cover letter and CV tailored for ${opportunity.company} have been generated. Keywords used: ${keywords?.join(', ') || 'None'}`,
       });
 
     } catch (error) {
@@ -488,6 +496,15 @@ const Opportunities = () => {
         </div>
       </main>
       <Footer />
+      
+      <DocumentViewerModal
+        isOpen={documentModal.isOpen}
+        onClose={() => setDocumentModal(prev => ({ ...prev, isOpen: false }))}
+        coverLetter={documentModal.coverLetter}
+        cv={documentModal.cv}
+        jobTitle={documentModal.jobTitle}
+        companyName={documentModal.companyName}
+      />
     </div>
   );
 };
