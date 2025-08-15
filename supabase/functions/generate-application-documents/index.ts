@@ -174,6 +174,12 @@ Format the letter with proper business letter formatting.`;
     }),
   });
 
+  if (!response.ok) {
+    const errorData = await response.text();
+    console.error('OpenAI API error:', response.status, errorData);
+    throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
+  }
+
   const data = await response.json();
   
   if (!data.choices || data.choices.length === 0) {
@@ -253,6 +259,12 @@ Format the CV professionally with clear section headers and bullet points.`;
       max_tokens: 1500
     }),
   });
+
+  if (!response.ok) {
+    const errorData = await response.text();
+    console.error('OpenAI API error:', response.status, errorData);
+    throw new Error(`OpenAI API error: ${response.status} - ${errorData}`);
+  }
 
   const data = await response.json();
   
