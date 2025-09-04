@@ -228,10 +228,12 @@ const Opportunities = () => {
   const generateApplicationDocuments = async (opportunity: any) => {
     if (!user) {
       toast({
-        title: "Authentication Required",
-        description: "Please sign in to generate application documents.",
+        title: "Sign In Required",
+        description: "Please sign in to your account to generate application documents.",
         variant: "destructive"
       });
+      // Redirect to auth page
+      window.location.href = '/auth';
       return;
     }
 
