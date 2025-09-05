@@ -28,6 +28,7 @@ interface PersonalDetails {
   phone: string;
   address: string;
   summary: string;
+  profile_picture_url?: string;
 }
 
 interface CVRendererProps {
@@ -50,9 +51,18 @@ const ModernFormat = ({ personalDetails, experiences, education }: Omit<CVRender
     {/* Header with gradient background */}
     <Card className="bg-gradient-subtle border-0 shadow-elevation">
       <CardHeader className="text-center pb-6">
-        <CardTitle className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-          {personalDetails.full_name || 'Your Name'}
-        </CardTitle>
+        <div className="flex flex-col items-center gap-4">
+          {personalDetails.profile_picture_url && (
+            <img
+              src={personalDetails.profile_picture_url}
+              alt="Profile"
+              className="w-24 h-24 rounded-full object-cover border-4 border-primary/20 shadow-soft"
+            />
+          )}
+          <CardTitle className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+            {personalDetails.full_name || 'Your Name'}
+          </CardTitle>
+        </div>
         <div className="space-y-2 text-muted-foreground">
           {personalDetails.email && <p className="text-sm">{personalDetails.email}</p>}
           {personalDetails.phone && <p className="text-sm">{personalDetails.phone}</p>}
@@ -154,9 +164,18 @@ const ClassicFormat = ({ personalDetails, experiences, education }: Omit<CVRende
     {/* Header - Traditional style */}
     <Card className="border-2 border-foreground/20">
       <CardHeader className="text-center border-b border-foreground/10">
-        <CardTitle className="text-2xl font-bold text-foreground uppercase tracking-wide">
-          {personalDetails.full_name || 'Your Name'}
-        </CardTitle>
+        <div className="flex flex-col items-center gap-3">
+          {personalDetails.profile_picture_url && (
+            <img
+              src={personalDetails.profile_picture_url}
+              alt="Profile"
+              className="w-20 h-20 rounded-full object-cover border-2 border-foreground/30"
+            />
+          )}
+          <CardTitle className="text-2xl font-bold text-foreground uppercase tracking-wide">
+            {personalDetails.full_name || 'Your Name'}
+          </CardTitle>
+        </div>
         <div className="space-y-1 text-foreground/80 text-sm">
           {personalDetails.email && <p>{personalDetails.email}</p>}
           {personalDetails.phone && <p>{personalDetails.phone}</p>}
@@ -253,9 +272,18 @@ const CreativeFormat = ({ personalDetails, experiences, education }: Omit<CVRend
     <Card className="bg-gradient-hero border-0 shadow-glow relative overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10"></div>
       <CardHeader className="text-center pb-6 relative z-10">
-        <CardTitle className="text-4xl font-bold text-primary-foreground mb-4 drop-shadow-sm">
-          {personalDetails.full_name || 'Your Name'}
-        </CardTitle>
+        <div className="flex flex-col items-center gap-4">
+          {personalDetails.profile_picture_url && (
+            <img
+              src={personalDetails.profile_picture_url}
+              alt="Profile"
+              className="w-28 h-28 rounded-full object-cover border-4 border-primary-foreground/30 shadow-glow"
+            />
+          )}
+          <CardTitle className="text-4xl font-bold text-primary-foreground mb-4 drop-shadow-sm">
+            {personalDetails.full_name || 'Your Name'}
+          </CardTitle>
+        </div>
         <div className="flex flex-wrap justify-center gap-4 text-primary-foreground/90">
           {personalDetails.email && (
             <div className="bg-primary-foreground/20 px-3 py-1 rounded-full text-sm backdrop-blur-sm">
@@ -368,9 +396,18 @@ const MinimalFormat = ({ personalDetails, experiences, education }: Omit<CVRende
   <div className="space-y-8 max-w-4xl mx-auto">
     {/* Header - Ultra minimal */}
     <div className="text-center border-b border-border pb-6">
-      <h1 className="text-3xl font-light text-foreground mb-3 tracking-wide">
-        {personalDetails.full_name || 'Your Name'}
-      </h1>
+      <div className="flex flex-col items-center gap-4 mb-4">
+        {personalDetails.profile_picture_url && (
+          <img
+            src={personalDetails.profile_picture_url}
+            alt="Profile"
+            className="w-20 h-20 rounded-full object-cover border border-border"
+          />
+        )}
+        <h1 className="text-3xl font-light text-foreground tracking-wide">
+          {personalDetails.full_name || 'Your Name'}
+        </h1>
+      </div>
       <div className="flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
         {personalDetails.email && <span>{personalDetails.email}</span>}
         {personalDetails.phone && <span>{personalDetails.phone}</span>}

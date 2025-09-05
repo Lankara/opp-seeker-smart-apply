@@ -16,6 +16,7 @@ import Header from "@/components/Header";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { CVRenderer } from "@/components/CVRenderer";
+import { ProfilePictureEditor } from "@/components/ProfilePictureEditor";
 
 const personalDetailsSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
@@ -23,6 +24,7 @@ const personalDetailsSchema = z.object({
   phone: z.string().optional(),
   address: z.string().optional(),
   summary: z.string().optional(),
+  profile_picture_url: z.string().optional(),
 });
 
 const experienceSchema = z.object({
@@ -90,6 +92,7 @@ const Profile = () => {
       phone: "",
       address: "",
       summary: "",
+      profile_picture_url: "",
     },
   });
 
@@ -126,6 +129,7 @@ const Profile = () => {
           phone: personalData.phone || "",
           address: personalData.address || "",
           summary: personalData.summary || "",
+          profile_picture_url: personalData.profile_picture_url || "",
         });
       }
 
@@ -460,6 +464,16 @@ const Profile = () => {
                   <CardDescription>Basic information about yourself</CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {/* Profile Picture Editor */}
+                  <div className="mb-6">
+                    <ProfilePictureEditor
+                      currentImageUrl={personalForm.getValues('profile_picture_url')}
+                      onImageUpdate={(imageUrl) => {
+                        personalForm.setValue('profile_picture_url', imageUrl);
+                      }}
+                    />
+                  </div>
+
                   <Form {...personalForm}>
                     <form onSubmit={personalForm.handleSubmit(onSubmitPersonalDetails)} className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -558,6 +572,7 @@ const Profile = () => {
                   phone: personalForm.getValues('phone') || '',
                   address: personalForm.getValues('address') || '',
                   summary: personalForm.getValues('summary') || '',
+                  profile_picture_url: personalForm.getValues('profile_picture_url') || '',
                 }}
                 experiences={experiences}
                 education={education}
