@@ -10,9 +10,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Eye, EyeOff } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Eye, EyeOff, FileText, Palette } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
+import { CVRenderer } from "@/components/CVRenderer";
 
 const personalDetailsSchema = z.object({
   full_name: z.string().min(1, "Full name is required"),
@@ -44,6 +47,31 @@ type PersonalDetails = z.infer<typeof personalDetailsSchema>;
 type Experience = z.infer<typeof experienceSchema> & { id?: string };
 type Education = z.infer<typeof educationSchema> & { id?: string };
 
+type CVFormat = 'modern' | 'classic' | 'creative' | 'minimal';
+
+const cvFormats = {
+  modern: {
+    name: 'Modern Professional',
+    description: 'Clean design with subtle colors and modern typography',
+    preview: 'Contemporary layout with accent colors'
+  },
+  classic: {
+    name: 'Classic Traditional',
+    description: 'Traditional black and white format, ATS-friendly',
+    preview: 'Timeless professional appearance'
+  },
+  creative: {
+    name: 'Creative Design',
+    description: 'Bold layout with visual elements and graphics',
+    preview: 'Eye-catching design for creative industries'
+  },
+  minimal: {
+    name: 'Minimal Clean',
+    description: 'Ultra-clean with plenty of white space',
+    preview: 'Simple and elegant presentation'
+  }
+};
+
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
@@ -52,6 +80,7 @@ const Profile = () => {
   const [experiences, setExperiences] = useState<Experience[]>([]);
   const [education, setEducation] = useState<Education[]>([]);
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
+  const [selectedFormat, setSelectedFormat] = useState<CVFormat>('modern');
 
   const personalForm = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
@@ -370,29 +399,60 @@ const Profile = () => {
               <h1 className="text-3xl font-bold text-foreground">Profile & CV Details</h1>
               <p className="text-muted-foreground">Manage your personal information, experience, and education</p>
             </div>
-            <Button
-              onClick={() => setViewMode(viewMode === 'edit' ? 'preview' : 'edit')}
-              variant="outline"
-              className="flex items-center gap-2"
-            >
-              {viewMode === 'edit' ? (
-                <>
-                  <Eye className="w-4 h-4" />
-                  Preview CV
-                </>
-              ) : (
-                <>
-                  <EyeOff className="w-4 h-4" />
-                  Edit Mode
-                </>
-              )}
-            </Button>
+            <div className="flex items-center gap-3">
+              <Button
+                onClick={() => setViewMode(viewMode === 'edit' ? 'preview' : 'edit')}
+                variant="outline"
+                className="flex items-center gap-2"
+              >
+                {viewMode === 'edit' ? (
+                  <>
+                    <Eye className="w-4 h-4" />
+                    Preview CV
+                  </>
+                ) : (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    Edit Mode
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
         </div>
 
         <div className="space-y-8">
           {viewMode === 'edit' ? (
             <>
+              {/* CV Format Selection */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Palette className="w-5 h-5" />
+                    CV Format
+                  </CardTitle>
+                  <CardDescription>Choose your preferred CV template style</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RadioGroup value={selectedFormat} onValueChange={(value) => setSelectedFormat(value as CVFormat)}>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(cvFormats).map(([key, format]) => (
+                        <div key={key} className="flex items-start space-x-3 space-y-0">
+                          <RadioGroupItem value={key} id={key} className="mt-1" />
+                          <div className="flex-1 space-y-1">
+                            <Label htmlFor={key} className="text-sm font-medium cursor-pointer">
+                              {format.name}
+                            </Label>
+                            <p className="text-xs text-muted-foreground">{format.description}</p>
+                            <p className="text-xs text-primary/80">{format.preview}</p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </RadioGroup>
+                </CardContent>
+              </Card>
+
               {/* Personal Details */}
               <Card>
                 <CardHeader>
@@ -484,32 +544,24 @@ const Profile = () => {
           ) : (
             <>
               {/* CV Preview Mode */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-center text-2xl font-bold">
-                    {personalForm.getValues('full_name') || 'Your Name'}
-                  </CardTitle>
-                  <div className="text-center space-y-1 text-muted-foreground">
-                    {personalForm.getValues('email') && (
-                      <p>{personalForm.getValues('email')}</p>
-                    )}
-                    {personalForm.getValues('phone') && (
-                      <p>{personalForm.getValues('phone')}</p>
-                    )}
-                    {personalForm.getValues('address') && (
-                      <p>{personalForm.getValues('address')}</p>
-                    )}
-                  </div>
-                </CardHeader>
-                {personalForm.getValues('summary') && (
-                  <CardContent>
-                    <div className="text-center">
-                      <h3 className="font-semibold mb-2">Professional Summary</h3>
-                      <p className="text-muted-foreground">{personalForm.getValues('summary')}</p>
-                    </div>
-                  </CardContent>
-                )}
-              </Card>
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-xl font-semibold text-foreground">CV Preview - {cvFormats[selectedFormat].name}</h2>
+                <div className="text-sm text-muted-foreground bg-accent/30 px-3 py-1 rounded-full">
+                  {cvFormats[selectedFormat].description}
+                </div>
+              </div>
+              <CVRenderer
+                format={selectedFormat}
+                personalDetails={{
+                  full_name: personalForm.getValues('full_name') || '',
+                  email: personalForm.getValues('email') || '',
+                  phone: personalForm.getValues('phone') || '',
+                  address: personalForm.getValues('address') || '',
+                  summary: personalForm.getValues('summary') || '',
+                }}
+                experiences={experiences}
+                education={education}
+              />
             </>
           )}
 
@@ -605,51 +657,7 @@ const Profile = () => {
                 </CardContent>
               </Card>
             </>
-          ) : (
-            <>
-              {/* Experience Preview */}
-              {experiences.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Professional Experience</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {experiences.filter(exp => exp.company_name && exp.position).map((experience, index) => (
-                      <div key={index} className="border-l-4 border-primary pl-4">
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-start">
-                          <div>
-                            <h3 className="font-semibold text-lg">{experience.position}</h3>
-                            <p className="text-primary font-medium">{experience.company_name}</p>
-                          </div>
-                          <div className="text-sm text-muted-foreground mt-1 md:mt-0">
-                            {experience.start_date && (
-                              <>
-                                {new Date(experience.start_date).toLocaleDateString('en-US', { 
-                                  month: 'short', 
-                                  year: 'numeric' 
-                                })}
-                                {' - '}
-                                {experience.is_current ? 'Present' : 
-                                  experience.end_date ? 
-                                    new Date(experience.end_date).toLocaleDateString('en-US', { 
-                                      month: 'short', 
-                                      year: 'numeric' 
-                                    }) : 'Present'
-                                }
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        {experience.description && (
-                          <p className="mt-2 text-muted-foreground">{experience.description}</p>
-                        )}
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          )}
+          ) : null}
 
           {viewMode === 'edit' ? (
             <>
@@ -740,55 +748,7 @@ const Profile = () => {
                 </CardContent>
               </Card>
             </>
-          ) : (
-            <>
-              {/* Education Preview */}
-              {education.length > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Education</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    {education.filter(edu => edu.institution && edu.degree).map((edu, index) => (
-                      <div key={index} className="border-l-4 border-primary pl-4">
-                        <div className="flex flex-col md:flex-row md:justify-between md:items-start">
-                          <div>
-                            <h3 className="font-semibold text-lg">{edu.degree}</h3>
-                            <p className="text-primary font-medium">{edu.institution}</p>
-                            {edu.field_of_study && (
-                              <p className="text-muted-foreground">{edu.field_of_study}</p>
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground mt-1 md:mt-0">
-                            {edu.start_date && (
-                              <>
-                                {new Date(edu.start_date).toLocaleDateString('en-US', { 
-                                  month: 'short', 
-                                  year: 'numeric' 
-                                })}
-                                {edu.end_date && (
-                                  <>
-                                    {' - '}
-                                    {new Date(edu.end_date).toLocaleDateString('en-US', { 
-                                      month: 'short', 
-                                      year: 'numeric' 
-                                    })}
-                                  </>
-                                )}
-                              </>
-                            )}
-                            {edu.grade && (
-                              <div className="mt-1">Grade: {edu.grade}</div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-            </>
-          )}
+          ) : null}
         </div>
       </div>
     </div>
