@@ -56,7 +56,7 @@ const ModernFormat = ({ personalDetails, experiences, education }: Omit<CVRender
             <img
               src={personalDetails.profile_picture_url}
               alt="Profile"
-              className="w-24 h-24 rounded-full object-cover border-4 border-primary/20 shadow-soft"
+              className="w-24 h-24 rounded-full object-cover border-4 border-primary/30 shadow-soft"
             />
           )}
           <CardTitle className="text-3xl font-bold bg-gradient-primary bg-clip-text text-transparent">
@@ -164,12 +164,12 @@ const ClassicFormat = ({ personalDetails, experiences, education }: Omit<CVRende
     {/* Header - Traditional style */}
     <Card className="border-2 border-foreground/20">
       <CardHeader className="text-center border-b border-foreground/10">
-        <div className="flex flex-col items-center gap-3">
+        <div className="flex flex-col items-center gap-4">
           {personalDetails.profile_picture_url && (
             <img
               src={personalDetails.profile_picture_url}
               alt="Profile"
-              className="w-20 h-20 rounded-full object-cover border-2 border-foreground/30"
+              className="w-20 h-20 rounded-full object-cover border-2 border-foreground/20"
             />
           )}
           <CardTitle className="text-2xl font-bold text-foreground uppercase tracking-wide">
@@ -396,15 +396,15 @@ const MinimalFormat = ({ personalDetails, experiences, education }: Omit<CVRende
   <div className="space-y-8 max-w-4xl mx-auto">
     {/* Header - Ultra minimal */}
     <div className="text-center border-b border-border pb-6">
-      <div className="flex flex-col items-center gap-4 mb-4">
+      <div className="flex flex-col items-center gap-4">
         {personalDetails.profile_picture_url && (
           <img
             src={personalDetails.profile_picture_url}
             alt="Profile"
-            className="w-20 h-20 rounded-full object-cover border border-border"
+            className="w-20 h-20 rounded-full object-cover"
           />
         )}
-        <h1 className="text-3xl font-light text-foreground tracking-wide">
+        <h1 className="text-3xl font-light text-foreground mb-3 tracking-wide">
           {personalDetails.full_name || 'Your Name'}
         </h1>
       </div>

@@ -1,63 +1,105 @@
-import { useState, useRef, useEffect } from "react";
-import { Canvas as FabricCanvas, FabricImage } from "fabric";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { Camera, Upload, ZoomIn, ZoomOut, RotateCw, Save, X } from "lucide-react";
+import React, { useRef, useEffect, useState } from 'react';
+import { Canvas as FabricCanvas, FabricImage } from 'fabric';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useToast } from '@/hooks/use-toast';
+import { Camera, Crop, ZoomIn, ZoomOut, Save, X, Upload } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface ProfilePictureEditorProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (imageUrl: string) => void;
   currentImageUrl?: string;
-  onImageUpdate: (imageUrl: string) => void;
+  userId: string;
 }
 
-export const ProfilePictureEditor = ({ currentImageUrl, onImageUpdate }: ProfilePictureEditorProps) => {
-  const { user } = useAuth();
-  const { toast } = useToast();
+export const ProfilePictureEditor: React.FC<ProfilePictureEditorProps> = ({
+  isOpen,
+  onClose,
+  onSave,
+  currentImageUrl,
+  userId
+}) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [fabricCanvas, setFabricCanvas] = useState<FabricCanvas | null>(null);
-  const [isEditing, setIsEditing] = useState(false);
   const [currentImage, setCurrentImage] = useState<FabricImage | null>(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    if (!canvasRef.current || !isEditing) return;
+    if (!isOpen || !canvasRef.current) return;
 
     const canvas = new FabricCanvas(canvasRef.current, {
-      width: 400,
-      height: 400,
-      backgroundColor: "#f8f9fa",
+      width: 300,
+      height: 300,
+      backgroundColor: '#f8f9fa',
     });
 
     setFabricCanvas(canvas);
 
+    // Load current image if exists
+    if (currentImageUrl) {
+      loadImageToCanvas(canvas, currentImageUrl);
+    }
+
     return () => {
       canvas.dispose();
     };
-  }, [isEditing]);
+  }, [isOpen, currentImageUrl]);
 
-  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const loadImageToCanvas = async (canvas: FabricCanvas, imageUrl: string) => {
+    try {
+      const img = await FabricImage.fromURL(imageUrl);
+      
+      // Scale image to fit canvas while maintaining aspect ratio
+      const canvasSize = 300;
+      const scale = Math.min(canvasSize / img.width!, canvasSize / img.height!);
+      
+      img.set({
+        scaleX: scale,
+        scaleY: scale,
+        left: canvasSize / 2,
+        top: canvasSize / 2,
+        originX: 'center',
+        originY: 'center',
+      });
+
+      canvas.clear();
+      canvas.add(img);
+      canvas.setActiveObject(img);
+      setCurrentImage(img);
+      canvas.renderAll();
+    } catch (error) {
+      console.error('Error loading image:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load image",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !fabricCanvas) return;
 
+    // Validate file type
     if (!file.type.startsWith('image/')) {
       toast({
-        title: "Invalid file type",
-        description: "Please select an image file.",
+        title: "Invalid file",
+        description: "Please select an image file",
         variant: "destructive",
       });
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) { // 5MB limit
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
       toast({
         title: "File too large",
-        description: "Please select an image smaller than 5MB.",
+        description: "Please select an image smaller than 5MB",
         variant: "destructive",
       });
       return;
@@ -65,268 +107,208 @@ export const ProfilePictureEditor = ({ currentImageUrl, onImageUpdate }: Profile
 
     const reader = new FileReader();
     reader.onload = (e) => {
-      const imgElement = new Image();
-      imgElement.onload = () => {
-        if (!fabricCanvas) return;
-
-        FabricImage.fromURL(e.target?.result as string).then((img) => {
-          // Clear canvas
-          fabricCanvas.clear();
-          
-          // Scale image to fit canvas while maintaining aspect ratio
-          const canvasWidth = fabricCanvas.width || 400;
-          const canvasHeight = fabricCanvas.height || 400;
-          const scale = Math.min(canvasWidth / img.width!, canvasHeight / img.height!);
-          
-          img.set({
-            scaleX: scale,
-            scaleY: scale,
-            left: (canvasWidth - img.width! * scale) / 2,
-            top: (canvasHeight - img.height! * scale) / 2,
-          });
-
-          fabricCanvas.add(img);
-          fabricCanvas.setActiveObject(img);
-          setCurrentImage(img);
-          fabricCanvas.renderAll();
-        });
-      };
-      imgElement.src = e.target?.result as string;
+      const imageUrl = e.target?.result as string;
+      loadImageToCanvas(fabricCanvas, imageUrl);
     };
     reader.readAsDataURL(file);
-    setIsEditing(true);
   };
 
   const handleZoomIn = () => {
     if (!currentImage) return;
-    const currentScale = currentImage.scaleX || 1;
-    currentImage.set({
-      scaleX: currentScale * 1.2,
-      scaleY: currentScale * 1.2,
-    });
+    const newScale = Math.min((currentImage.scaleX || 1) * 1.2, 3);
+    currentImage.set({ scaleX: newScale, scaleY: newScale });
     fabricCanvas?.renderAll();
   };
 
   const handleZoomOut = () => {
     if (!currentImage) return;
-    const currentScale = currentImage.scaleX || 1;
-    const newScale = Math.max(0.1, currentScale * 0.8);
-    currentImage.set({
-      scaleX: newScale,
-      scaleY: newScale,
-    });
-    fabricCanvas?.renderAll();
-  };
-
-  const handleRotate = () => {
-    if (!currentImage) return;
-    const currentAngle = currentImage.angle || 0;
-    currentImage.set({
-      angle: currentAngle + 90,
-    });
+    const newScale = Math.max((currentImage.scaleX || 1) * 0.8, 0.1);
+    currentImage.set({ scaleX: newScale, scaleY: newScale });
     fabricCanvas?.renderAll();
   };
 
   const handleSave = async () => {
-    if (!fabricCanvas || !user) return;
+    if (!fabricCanvas || !currentImage) {
+      toast({
+        title: "No image",
+        description: "Please upload an image first",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    setIsUploading(true);
+    setIsLoading(true);
+
     try {
-      // Create a circular crop
-      const canvas = document.createElement('canvas');
-      canvas.width = 300;
-      canvas.height = 300;
-      const ctx = canvas.getContext('2d');
-      
-      if (!ctx) throw new Error('Could not get canvas context');
+      // Create a new canvas for cropping
+      const cropCanvas = document.createElement('canvas');
+      cropCanvas.width = 200;
+      cropCanvas.height = 200;
+      const cropCtx = cropCanvas.getContext('2d');
 
-      // Create circular clipping path
-      ctx.beginPath();
-      ctx.arc(150, 150, 150, 0, Math.PI * 2);
-      ctx.clip();
+      if (!cropCtx) {
+        throw new Error('Could not get canvas context');
+      }
 
-      // Get the fabric canvas as image and draw it
-      const fabricCanvasElement = fabricCanvas.getElement();
-      ctx.drawImage(fabricCanvasElement, 0, 0, 300, 300);
+      // Calculate the crop area (center crop)
+      const canvasSize = 300;
+      const cropSize = 200;
+      const cropX = (canvasSize - cropSize) / 2;
+      const cropY = (canvasSize - cropSize) / 2;
+
+      // Get the main canvas as image data
+      const mainCanvasDataUrl = fabricCanvas.toDataURL({
+        format: 'png',
+        quality: 1,
+        multiplier: 1,
+        left: cropX,
+        top: cropY,
+        width: cropSize,
+        height: cropSize,
+      });
 
       // Convert to blob
-      const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((blob) => {
-          if (blob) resolve(blob);
-          else reject(new Error('Failed to create blob'));
-        }, 'image/jpeg', 0.9);
-      });
+      const response = await fetch(mainCanvasDataUrl);
+      const blob = await response.blob();
 
-      // Upload to Supabase storage
-      const fileName = `${user.id}/profile-picture-${Date.now()}.jpg`;
-      const { error: uploadError } = await supabase.storage
+      // Upload to Supabase Storage
+      const fileName = `profile_${userId}_${Date.now()}.png`;
+      const filePath = `${userId}/${fileName}`;
+
+      const { data, error } = await supabase.storage
         .from('profile-pictures')
-        .upload(fileName, blob);
-
-      if (uploadError) throw uploadError;
-
-      // Get public URL
-      const { data: { publicUrl } } = supabase.storage
-        .from('profile-pictures')
-        .getPublicUrl(fileName);
-
-      // Update personal details with new profile picture URL
-      const { error: updateError } = await supabase
-        .from('personal_details')
-        .upsert({
-          user_id: user.id,
-          profile_picture_url: publicUrl,
-        }, {
-          onConflict: 'user_id'
+        .upload(filePath, blob, {
+          contentType: 'image/png',
+          upsert: true,
         });
 
-      if (updateError) throw updateError;
+      if (error) {
+        throw error;
+      }
 
-      onImageUpdate(publicUrl);
-      setIsEditing(false);
-      
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('profile-pictures')
+        .getPublicUrl(filePath);
+
+      const publicUrl = urlData.publicUrl;
+
+      onSave(publicUrl);
+      onClose();
+
       toast({
         title: "Success",
-        description: "Profile picture updated successfully!",
+        description: "Profile picture saved successfully",
       });
+
     } catch (error) {
       console.error('Error saving profile picture:', error);
       toast({
         title: "Error",
-        description: "Failed to save profile picture. Please try again.",
+        description: "Failed to save profile picture",
         variant: "destructive",
       });
     } finally {
-      setIsUploading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleCancel = () => {
-    setIsEditing(false);
-    setCurrentImage(null);
-    if (fabricCanvas) {
-      fabricCanvas.clear();
-    }
-  };
+  if (!isOpen) return null;
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center gap-4">
-        {currentImageUrl ? (
-          <div className="relative">
-            <img
-              src={currentImageUrl}
-              alt="Profile"
-              className="w-20 h-20 rounded-full object-cover border-2 border-primary/20"
-            />
+    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Camera className="w-5 h-5" />
+                Edit Profile Picture
+              </CardTitle>
+              <CardDescription>
+                Upload, crop, and adjust your profile picture
+              </CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </Button>
           </div>
-        ) : (
-          <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center border-2 border-dashed border-border">
-            <Camera className="w-8 h-8 text-muted-foreground" />
-          </div>
-        )}
-        
-        <div className="space-y-2">
-          <Label htmlFor="profile-picture" className="text-sm font-medium">
-            Profile Picture
-          </Label>
-          <div className="flex gap-2">
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {/* Upload Button */}
+          <div className="flex justify-center">
             <Button
               variant="outline"
-              size="sm"
               onClick={() => fileInputRef.current?.click()}
               className="flex items-center gap-2"
             >
               <Upload className="w-4 h-4" />
-              {currentImageUrl ? 'Change' : 'Upload'}
+              Upload Image
             </Button>
-            {currentImageUrl && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => onImageUpdate('')}
-                className="flex items-center gap-2"
-              >
-                <X className="w-4 h-4" />
-                Remove
-              </Button>
-            )}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
           </div>
-        </div>
-      </div>
 
-      <Input
-        ref={fileInputRef}
-        type="file"
-        accept="image/*"
-        onChange={handleFileSelect}
-        className="hidden"
-      />
-
-      <Dialog open={isEditing} onOpenChange={setIsEditing}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Profile Picture</DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-            <div className="flex justify-center">
-              <canvas
-                ref={canvasRef}
-                className="border border-border rounded-lg shadow-sm"
-              />
-            </div>
-            
-            <div className="flex justify-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleZoomOut}
-                className="flex items-center gap-2"
-              >
-                <ZoomOut className="w-4 h-4" />
-                Zoom Out
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleZoomIn}
-                className="flex items-center gap-2"
-              >
-                <ZoomIn className="w-4 h-4" />
-                Zoom In
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleRotate}
-                className="flex items-center gap-2"
-              >
-                <RotateCw className="w-4 h-4" />
-                Rotate
-              </Button>
-            </div>
-            
-            <div className="flex justify-end gap-2">
-              <Button
-                variant="outline"
-                onClick={handleCancel}
-                disabled={isUploading}
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={handleSave}
-                disabled={isUploading || !currentImage}
-                className="flex items-center gap-2"
-              >
-                <Save className="w-4 h-4" />
-                {isUploading ? 'Saving...' : 'Save'}
-              </Button>
+          {/* Canvas */}
+          <div className="flex justify-center">
+            <div className="border-2 border-dashed border-border rounded-lg overflow-hidden">
+              <canvas ref={canvasRef} className="block" />
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+
+          {/* Controls */}
+          <div className="flex justify-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleZoomOut}
+              disabled={!currentImage}
+            >
+              <ZoomOut className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleZoomIn}
+              disabled={!currentImage}
+            >
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+          </div>
+
+          {/* Instructions */}
+          <div className="text-center text-sm text-muted-foreground">
+            <p>Drag to reposition • Use zoom controls to resize</p>
+            <p>Image will be cropped to a square (200x200)</p>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={onClose} className="flex-1">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSave}
+              disabled={!currentImage || isLoading}
+              className="flex-1"
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <>
+                  <Save className="w-4 h-4 mr-2" />
+                  Save
+                </>
+              )}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };

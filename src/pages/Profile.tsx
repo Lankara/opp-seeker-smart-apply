@@ -10,7 +10,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Plus, Trash2, Eye, EyeOff, FileText, Palette } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Eye, EyeOff, FileText, Palette, Camera } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Header from "@/components/Header";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -83,6 +83,7 @@ const Profile = () => {
   const [education, setEducation] = useState<Education[]>([]);
   const [viewMode, setViewMode] = useState<'edit' | 'preview'>('edit');
   const [selectedFormat, setSelectedFormat] = useState<CVFormat>('modern');
+  const [showProfilePictureEditor, setShowProfilePictureEditor] = useState(false);
 
   const personalForm = useForm<PersonalDetails>({
     resolver: zodResolver(personalDetailsSchema),
@@ -329,8 +330,20 @@ const Profile = () => {
     setEducation(updated);
   };
 
+  const handleProfilePictureSave = async (imageUrl: string) => {
+    const currentData = personalForm.getValues();
+    personalForm.setValue('profile_picture_url', imageUrl);
+    
+    // Save to database
+    await onSubmitPersonalDetails({
+      ...currentData,
+      profile_picture_url: imageUrl,
+    });
+    
+    setShowProfilePictureEditor(false);
+  };
+
   const saveEducation = async () => {
-    if (!user) return;
 
     setSaving(true);
     try {
@@ -464,14 +477,32 @@ const Profile = () => {
                   <CardDescription>Basic information about yourself</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {/* Profile Picture Editor */}
-                  <div className="mb-6">
-                    <ProfilePictureEditor
-                      currentImageUrl={personalForm.getValues('profile_picture_url')}
-                      onImageUpdate={(imageUrl) => {
-                        personalForm.setValue('profile_picture_url', imageUrl);
-                      }}
-                    />
+                  {/* Profile Picture Section */}
+                  <div className="mb-6 text-center">
+                    <div className="relative inline-block">
+                      {personalForm.getValues('profile_picture_url') ? (
+                        <img
+                          src={personalForm.getValues('profile_picture_url')}
+                          alt="Profile"
+                          className="w-32 h-32 rounded-full object-cover border-4 border-primary/20"
+                        />
+                      ) : (
+                        <div className="w-32 h-32 rounded-full bg-accent flex items-center justify-center border-4 border-primary/20">
+                          <Camera className="w-8 h-8 text-muted-foreground" />
+                        </div>
+                      )}
+                      <Button
+                        type="button"
+                        size="sm"
+                        className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
+                        onClick={() => setShowProfilePictureEditor(true)}
+                      >
+                        <Camera className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Click the camera icon to add or edit your profile picture
+                    </p>
                   </div>
 
                   <Form {...personalForm}>
@@ -764,6 +795,15 @@ const Profile = () => {
               </Card>
             </>
           ) : null}
+
+          {/* Profile Picture Editor Modal */}
+          <ProfilePictureEditor
+            isOpen={showProfilePictureEditor}
+            onClose={() => setShowProfilePictureEditor(false)}
+            onSave={handleProfilePictureSave}
+            currentImageUrl={personalForm.getValues('profile_picture_url')}
+            userId={user?.id || ''}
+          />
         </div>
       </div>
     </div>
